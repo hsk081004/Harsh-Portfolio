@@ -1,0 +1,1329 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Harsh Kadikar | AI & Web Developer</title>
+
+		<!-- Fonts -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&family=Oswald:wght@400;700&display=swap"
+			rel="stylesheet"
+		/>
+
+		<!-- Tailwind CSS -->
+		<script src="https://cdn.tailwindcss.com"></script>
+
+		<!-- GSAP -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+		<!-- Icons -->
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+		/>
+
+		<script>
+			tailwind.config = {
+				theme: {
+					extend: {
+						colors: {
+							'brand-black': '#050505',
+							'brand-gray': '#121212',
+							'brand-red': '#DC0000', // Racing red inspiration
+							'brand-text-muted': '#888888',
+						},
+						fontFamily: {
+							sans: ['Montserrat', 'sans-serif'],
+							display: ['Oswald', 'sans-serif'],
+						},
+						backgroundImage: {
+							'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+						},
+						animation: {
+							'spin-slow': 'spin 10s linear infinite',
+						},
+					},
+				},
+			};
+		</script>
+
+		<style>
+			body {
+				background-color: #050505;
+				color: white;
+				overflow-x: hidden;
+				cursor: none; /* Custom cursor container */
+				visibility: hidden; /* Hide content until GSAP starts */
+			}
+
+			/* Ensure loader is visible immediately */
+			#preloader {
+				visibility: visible;
+			}
+
+			/* Custom Scrollbar */
+			::-webkit-scrollbar {
+				width: 8px;
+			}
+			::-webkit-scrollbar-track {
+				background: #050505;
+			}
+			::-webkit-scrollbar-thumb {
+				background: #333;
+				border-radius: 4px;
+			}
+			::-webkit-scrollbar-thumb:hover {
+				background: #dc0000;
+			}
+
+			/* Typography Utilities */
+			.text-outline {
+				-webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
+				color: transparent;
+				transition: all 0.5s ease;
+			}
+			.group:hover .text-outline {
+				-webkit-text-stroke: 0px;
+				color: white;
+			}
+
+			/* Custom Cursor */
+			#cursor {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 20px;
+				height: 20px;
+				border: 2px solid #dc0000;
+				border-radius: 50%;
+				pointer-events: none;
+				z-index: 9999;
+				transform: translate(-50%, -50%);
+				transition:
+					width 0.3s,
+					height 0.3s,
+					background-color 0.3s;
+				mix-blend-mode: difference;
+			}
+			#cursor.hovered {
+				width: 50px;
+				height: 50px;
+				background-color: rgba(220, 0, 0, 0.2);
+				border-color: transparent;
+			}
+
+			/* Hero Canvas */
+			#hero-canvas {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: -1;
+				opacity: 0.4;
+			}
+
+			/* Preloader Styles - Ferrari Red */
+			.loader-panel {
+				position: fixed;
+				top: 0;
+				height: 100%;
+				width: 50%;
+				background-color: #dc0000;
+				z-index: 9000;
+				transition: transform 0.1s ease;
+			}
+			.loader-panel-left {
+				left: 0;
+				border-right: 1px solid rgba(0, 0, 0, 0.1);
+			}
+			.loader-panel-right {
+				right: 0;
+				border-left: 1px solid rgba(0, 0, 0, 0.1);
+			}
+
+			.loader-content {
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				z-index: 9001;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+
+			/* Utility for reveal animations */
+			.reveal-text {
+				clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+			}
+
+			.char {
+				display: inline-block;
+			}
+
+			/* Card Hover Effects */
+			.project-card {
+				transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+			}
+			.project-card:hover {
+				transform: translateY(-10px);
+			}
+
+			/* Floating Resume Button Styles */
+			.resume-btn-float {
+				position: fixed;
+				bottom: 30px;
+				right: 30px;
+				z-index: 999;
+				box-shadow: 0 10px 30px rgba(220, 0, 0, 0.4);
+			}
+
+			/* Slideshow Specifics */
+			.slide-image {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				opacity: 0;
+				z-index: 1;
+			}
+			.slide-image.active {
+				opacity: 1;
+				z-index: 10;
+			}
+
+			/* Navbar Scroll Effect */
+			nav {
+				transition: all 0.4s ease;
+			}
+			nav.nav-scrolled {
+				background-color: rgba(5, 5, 5, 0.85); /* Dark semi-transparent */
+				backdrop-filter: blur(15px); /* Strong Blur */
+				-webkit-backdrop-filter: blur(15px);
+				border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+				padding-top: 15px;
+				padding-bottom: 15px;
+			}
+		</style>
+	</head>
+	<body class="antialiased">
+		<!-- PRELOADER -->
+		<div id="preloader">
+			<div
+				class="loader-panel loader-panel-left flex items-center justify-end pr-4"
+			></div>
+			<div
+				class="loader-panel loader-panel-right flex items-center justify-start pl-4"
+			></div>
+
+			<div class="loader-content overflow-hidden text-center">
+				<!-- Logo Container -->
+				<div class="relative mb-4">
+					<h1
+						class="loader-logo text-8xl md:text-9xl font-display font-bold text-white tracking-tighter"
+					>
+						HK
+					</h1>
+					<!-- Glitch/Red Effect - Black on Red bg -->
+					<h1
+						class="loader-logo-glitch absolute top-0 left-0 text-8xl md:text-9xl font-display font-bold text-black opacity-0 tracking-tighter"
+						style="transform: translate(2px, 2px)"
+					>
+						HK
+					</h1>
+				</div>
+
+				<div class="loader-text overflow-hidden mt-2">
+					<p class="font-sans text-xs uppercase tracking-[0.5em] text-white/80">
+						Portfolio Loading
+					</p>
+				</div>
+
+				<!-- Progress Line - White on Red -->
+				<div
+					class="w-48 h-[2px] bg-red-900 mt-6 relative overflow-hidden rounded-full"
+				>
+					<div
+						class="loader-progress absolute top-0 left-0 h-full w-full bg-white origin-left transform scale-x-0"
+					></div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Custom Cursor -->
+		<div id="cursor" class="hidden md:block"></div>
+
+		<!-- FLOATING RESUME BUTTON -->
+		<a
+			href="Harsh Kadikar Resume.pdf"
+			download
+			class="resume-btn-float w-16 h-16 bg-brand-red rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 hover-trigger group"
+		>
+			<i class="fa-solid fa-file-arrow-down text-white text-2xl"></i>
+			<!-- Tooltip -->
+			<span
+				class="absolute right-20 bg-white text-black text-xs font-bold py-2 px-4 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap tracking-wider"
+			>
+				DOWNLOAD RESUME
+			</span>
+		</a>
+
+		<!-- Navigation -->
+		<nav
+			class="fixed top-0 w-full z-50 px-6 py-6 flex justify-between items-center mix-blend-difference opacity-0 nav-item"
+		>
+			<a
+				href="#"
+				class="text-2xl font-display font-bold tracking-tighter hover-trigger text-white"
+				>HK.</a
+			>
+			<div
+				class="hidden md:flex items-center gap-8 text-sm font-medium tracking-widest uppercase"
+			>
+				<a
+					href="#about"
+					class="text-white hover:text-brand-red transition-colors hover-trigger"
+					>About</a
+				>
+				<a
+					href="#skills"
+					class="text-white hover:text-brand-red transition-colors hover-trigger"
+					>Skills</a
+				>
+				<a
+					href="#projects"
+					class="text-white hover:text-brand-red transition-colors hover-trigger"
+					>Projects</a
+				>
+				<a
+					href="#contact"
+					class="text-white hover:text-brand-red transition-colors hover-trigger"
+					>Contact</a
+				>
+				<a
+					href="Harsh Kadikar Resume.pdf"
+					target="_blank"
+					class="px-5 py-2 border border-brand-red text-white hover:bg-brand-red transition-all duration-300 hover-trigger"
+					>Resume</a
+				>
+			</div>
+			<a href="#contact" class="md:hidden text-xl hover-trigger text-white"
+				><i class="fa-solid fa-bars"></i
+			></a>
+		</nav>
+
+		<!-- HERO SECTION -->
+		<header
+			class="relative h-screen flex flex-col justify-center items-center overflow-hidden"
+		>
+			<canvas id="hero-canvas"></canvas>
+
+			<div class="z-10 text-center px-4">
+				<div class="overflow-hidden mb-2">
+					<h2
+						class="hero-subtitle text-brand-red font-medium tracking-[0.3em] text-sm md:text-base uppercase translate-y-full"
+					>
+						IT Student | AI & Computer Vision | Frontend
+					</h2>
+				</div>
+
+				<div class="overflow-hidden">
+					<h1
+						class="hero-title font-display font-bold text-6xl md:text-8xl lg:text-9xl uppercase leading-tight tracking-tight mix-blend-overlay translate-y-[100%]"
+					>
+						Harsh<br />Kadikar
+					</h1>
+				</div>
+
+				<div class="mt-8 flex justify-center gap-4 opacity-0 hero-cta">
+					<a
+						href="#projects"
+						class="group relative px-8 py-3 bg-white text-black font-bold uppercase tracking-wider text-sm overflow-hidden hover-trigger"
+					>
+						<span
+							class="relative z-10 group-hover:text-white transition-colors duration-300"
+							>View Work</span
+						>
+						<div
+							class="absolute inset-0 bg-brand-red transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300 ease-out"
+						></div>
+					</a>
+					<a
+						href="#contact"
+						class="px-8 py-3 border border-white/20 text-white font-bold uppercase tracking-wider text-sm hover:bg-white/10 transition-colors hover-trigger"
+					>
+						Contact Me
+					</a>
+				</div>
+			</div>
+
+			<!-- Scroll Indicator -->
+			<div
+				class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-0 hero-scroll"
+			>
+				<span class="text-[10px] uppercase tracking-widest">Scroll</span>
+				<div
+					class="w-[1px] h-12 bg-gradient-to-b from-brand-red to-transparent"
+				></div>
+			</div>
+		</header>
+
+		<!-- MARQUEE STRIP -->
+		<div
+			class="w-full bg-brand-red text-black py-3 overflow-hidden whitespace-nowrap border-y border-brand-red"
+		>
+			<div
+				class="marquee-content inline-block text-xl font-display font-bold uppercase tracking-widest"
+			>
+				Computer Vision • AI Solutions • Web Development • Data Science • Neural
+				Networks • GSAP Animations • Python • React • &nbsp; Computer Vision •
+				AI Solutions • Web Development • Data Science • Neural Networks • GSAP
+				Animations • Python • React • &nbsp;
+			</div>
+		</div>
+
+		<!-- ABOUT SECTION -->
+		<section
+			id="about"
+			class="py-24 md:py-32 px-6 md:px-12 max-w-7xl mx-auto relative"
+		>
+			<div class="grid md:grid-cols-12 gap-12 items-center">
+				<div class="md:col-span-5 relative">
+					<!-- UPDATED: Personal Image -->
+					<div
+						class="aspect-[4/5] bg-brand-gray w-full relative overflow-hidden group"
+					>
+						<!-- Using uploaded image name: myself2.jpeg -->
+						<img
+							src="myself2.jpeg"
+							class="absolute inset-0 w-full h-full object-cover object-top filter grayscale group-hover:grayscale-0 transition-all duration-700"
+							alt="Harsh Kadikar"
+						/>
+
+						<!-- Gradient Overlay for text readability -->
+						<div
+							class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"
+						></div>
+
+						<div class="absolute bottom-0 left-0 p-6 z-10">
+							<p
+								class="text-4xl font-display font-bold text-transparent stroke-white text-outline"
+							>
+								HK
+							</p>
+						</div>
+					</div>
+					<!-- Decorative element -->
+					<div
+						class="absolute -bottom-6 -right-6 w-32 h-32 border border-brand-red/30 rounded-full animate-spin-slow"
+					></div>
+				</div>
+
+				<div class="md:col-span-7">
+					<span
+						class="text-brand-red font-medium tracking-widest uppercase text-sm mb-4 block reveal-header"
+						>Who I Am</span
+					>
+					<h2
+						class="text-4xl md:text-6xl font-display font-bold mb-8 leading-tight reveal-header"
+					>
+						Bridging the gap between
+						<span class="text-brand-text-muted">Artificial Intelligence</span>
+						and <span class="text-brand-red">Interactive Web</span>.
+					</h2>
+					<div
+						class="space-y-6 text-gray-400 text-lg leading-relaxed reveal-text-block"
+					>
+						<p>
+							I am an Information Technology student passionate about AI,
+							computer vision, and modern web experiences. My work focuses on
+							building real-time Machine Learning systems and crafting
+							interactive, GSAP-powered interfaces that feel alive.
+						</p>
+						<p>
+							Whether it's optimizing YOLO models for license plate recognition
+							or creating seamless web applications, I aim for performance,
+							precision, and aesthetic excellence.
+						</p>
+					</div>
+
+					<div class="mt-12 flex gap-8 reveal-stats">
+						<div>
+							<span class="block text-4xl font-display font-bold text-white"
+								>4+</span
+							>
+							<span class="text-sm text-gray-500 uppercase tracking-wider"
+								>Major Projects</span
+							>
+						</div>
+						<div>
+							<span class="block text-4xl font-display font-bold text-white"
+								>2023</span
+							>
+							<span class="text-sm text-gray-500 uppercase tracking-wider"
+								>SSIP Finalist</span
+							>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- SKILLS SECTION -->
+		<section id="skills" class="py-24 bg-brand-gray relative">
+			<div class="max-w-7xl mx-auto px-6 md:px-12">
+				<div
+					class="mb-16 border-b border-white/10 pb-8 flex flex-col md:flex-row justify-between items-end"
+				>
+					<h2 class="text-4xl md:text-7xl font-display font-bold uppercase">
+						Technical<br />Arsenal
+					</h2>
+					<p class="text-gray-400 max-w-sm mt-4 md:mt-0 text-right">
+						Tools and technologies I use to build the future.
+					</p>
+				</div>
+
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+					<!-- Category 1 -->
+					<div
+						class="skill-card bg-black/50 p-8 border border-white/5 hover:border-brand-red/50 transition-colors group hover-trigger"
+					>
+						<div
+							class="h-12 w-12 bg-white/5 rounded-full flex items-center justify-center mb-6 group-hover:bg-brand-red group-hover:text-white transition-colors"
+						>
+							<i class="fa-solid fa-code text-xl"></i>
+						</div>
+						<h3 class="text-xl font-bold mb-4">Languages</h3>
+						<ul class="space-y-2 text-gray-400 text-sm">
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								Python & C++
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								JavaScript (ES6+)
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								SQL
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								HTML5 / CSS3
+							</li>
+						</ul>
+					</div>
+
+					<!-- Category 2 -->
+					<div
+						class="skill-card bg-black/50 p-8 border border-white/5 hover:border-brand-red/50 transition-colors group hover-trigger"
+					>
+						<div
+							class="h-12 w-12 bg-white/5 rounded-full flex items-center justify-center mb-6 group-hover:bg-brand-red group-hover:text-white transition-colors"
+						>
+							<i class="fa-solid fa-brain text-xl"></i>
+						</div>
+						<h3 class="text-xl font-bold mb-4">AI / ML</h3>
+						<ul class="space-y-2 text-gray-400 text-sm">
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								YOLO Object Detection
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								OpenCV & OCR
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								NumPy & Pandas
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								Real-time Systems
+							</li>
+						</ul>
+					</div>
+
+					<!-- Category 3 -->
+					<div
+						class="skill-card bg-black/50 p-8 border border-white/5 hover:border-brand-red/50 transition-colors group hover-trigger"
+					>
+						<div
+							class="h-12 w-12 bg-white/5 rounded-full flex items-center justify-center mb-6 group-hover:bg-brand-red group-hover:text-white transition-colors"
+						>
+							<i class="fa-solid fa-laptop-code text-xl"></i>
+						</div>
+						<h3 class="text-xl font-bold mb-4">Web & UI</h3>
+						<ul class="space-y-2 text-gray-400 text-sm">
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								React.js
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								GSAP Animation
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								Tailwind CSS
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								Responsive Design
+							</li>
+						</ul>
+					</div>
+
+					<!-- Category 4 -->
+					<div
+						class="skill-card bg-black/50 p-8 border border-white/5 hover:border-brand-red/50 transition-colors group hover-trigger"
+					>
+						<div
+							class="h-12 w-12 bg-white/5 rounded-full flex items-center justify-center mb-6 group-hover:bg-brand-red group-hover:text-white transition-colors"
+						>
+							<i class="fa-solid fa-screwdriver-wrench text-xl"></i>
+						</div>
+						<h3 class="text-xl font-bold mb-4">Tools</h3>
+						<ul class="space-y-2 text-gray-400 text-sm">
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								Flask & Streamlit
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								Google Colab
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								Git & GitHub
+							</li>
+							<li class="flex items-center gap-2">
+								<div class="w-1 h-1 bg-brand-red rounded-full"></div>
+								VS Code
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- PROJECTS SECTION -->
+		<section
+			id="projects"
+			class="py-24 md:py-32 px-6 md:px-12 max-w-7xl mx-auto"
+		>
+			<div
+				class="flex flex-col md:flex-row justify-between items-start md:items-end mb-20"
+			>
+				<div>
+					<span
+						class="text-brand-red font-medium tracking-widest uppercase text-sm mb-2 block"
+						>Selected Works</span
+					>
+					<h2
+						class="text-5xl md:text-8xl font-display font-bold uppercase leading-none"
+					>
+						Featured<br />Projects
+					</h2>
+				</div>
+				<div class="hidden md:block w-32 h-[1px] bg-white/20 mb-4"></div>
+			</div>
+
+			<div class="space-y-32">
+				<!-- Project 1: LICENSE PLATE RECOGNITION (Updated Images L1-L6) -->
+				<div
+					class="project-item group relative grid md:grid-cols-12 gap-8 items-center"
+				>
+					<div class="md:col-span-7 order-2 md:order-1 relative">
+						<div
+							class="absolute -inset-4 bg-brand-red/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"
+						></div>
+						<div
+							class="bg-brand-gray border border-white/10 aspect-video rounded-sm overflow-hidden relative"
+						>
+							<!-- Slideshow Container -->
+							<div
+								class="slideshow-container absolute inset-0 w-full h-full bg-zinc-900"
+							>
+								<!-- NOTE: Ensure files are named L1.jpg, L2.jpg etc exactly (case sensitive) -->
+								<img src="L1.png" class="slide-image active" alt="LPR Scan 1" />
+								<img src="L2.png" class="slide-image" alt="LPR Scan 2" />
+								<img src="L3.png" class="slide-image" alt="LPR Scan 3" />
+								<img src="L4.png" class="slide-image" alt="LPR Scan 4" />
+								<img src="L5.png" class="slide-image" alt="LPR Scan 5" />
+								<img src="L6.png" class="slide-image" alt="LPR Scan 6" />
+							</div>
+
+							<!-- Scan line effect overlay -->
+							<div
+								class="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+							>
+								<div
+									class="absolute top-0 left-0 w-full h-1 bg-brand-red/50 shadow-[0_0_20px_rgba(220,0,0,0.8)] animate-[scan_2s_ease-in-out_infinite] opacity-0 group-hover:opacity-100"
+								></div>
+							</div>
+						</div>
+					</div>
+					<div class="md:col-span-5 order-1 md:order-2">
+						<span
+							class="text-brand-red font-bold tracking-widest text-xs uppercase mb-2 block"
+							>01 / Computer Vision</span
+						>
+						<h3
+							class="text-3xl md:text-4xl font-display font-bold mb-6 group-hover:text-brand-red transition-colors"
+						>
+							License Plate Recognition
+						</h3>
+						<p class="text-gray-400 mb-6 leading-relaxed">
+							A real-time system built with YOLOv8 and OCR. Features live webcam
+							scanning, history tracking, and a memo system wrapped in a
+							GSAP-enhanced modern UI.
+						</p>
+						<div class="flex flex-wrap gap-2 mb-8">
+							<span
+								class="px-3 py-1 border border-white/20 text-xs uppercase tracking-wider text-gray-300"
+								>YOLOv8</span
+							>
+							<span
+								class="px-3 py-1 border border-white/20 text-xs uppercase tracking-wider text-gray-300"
+								>OCR</span
+							>
+							<span
+								class="px-3 py-1 border border-white/20 text-xs uppercase tracking-wider text-gray-300"
+								>Flask</span
+							>
+						</div>
+						<button
+							class="flex items-center gap-3 text-sm font-bold uppercase tracking-widest hover:text-brand-red transition-colors hover-trigger"
+						>
+							View Details <i class="fa-solid fa-arrow-right"></i>
+						</button>
+					</div>
+				</div>
+
+				<!-- Project 2: TRIBAL ASSISTANCE PORTAL (Updated Images T1-T5) -->
+				<div
+					class="project-item group relative grid md:grid-cols-12 gap-8 items-center"
+				>
+					<div class="md:col-span-5 relative z-10">
+						<span
+							class="text-brand-red font-bold tracking-widest text-xs uppercase mb-2 block"
+							>02 / SSIP'23 Finalist</span
+						>
+						<h3
+							class="text-3xl md:text-4xl font-display font-bold mb-6 group-hover:text-brand-red transition-colors"
+						>
+							Tribal Assistance Portal
+						</h3>
+						<p class="text-gray-400 mb-6 leading-relaxed">
+							Speech-enabled web portal simplifying government scheme access for
+							tribal citizens. Includes admin verification dashboards and
+							automated email notifications.
+						</p>
+						<div class="flex flex-wrap gap-2 mb-8">
+							<span
+								class="px-3 py-1 border border-white/20 text-xs uppercase tracking-wider text-gray-300"
+								>React</span
+							>
+							<span
+								class="px-3 py-1 border border-white/20 text-xs uppercase tracking-wider text-gray-300"
+								>Speech API</span
+							>
+							<span
+								class="px-3 py-1 border border-white/20 text-xs uppercase tracking-wider text-gray-300"
+								>Node</span
+							>
+						</div>
+						<button
+							class="flex items-center gap-3 text-sm font-bold uppercase tracking-widest hover:text-brand-red transition-colors hover-trigger"
+						>
+							View Details <i class="fa-solid fa-arrow-right"></i>
+						</button>
+					</div>
+					<div class="md:col-span-7 relative">
+						<div
+							class="bg-brand-gray border border-white/10 aspect-video rounded-sm overflow-hidden relative group-hover:border-brand-red/30 transition-colors"
+						>
+							<!-- Slideshow Container -->
+							<div
+								class="slideshow-container absolute inset-0 w-full h-full bg-zinc-900"
+							>
+								<img
+									src="T1.jpg"
+									class="slide-image active"
+									alt="Tribal Portal 1"
+								/>
+								<img src="T2.jpg" class="slide-image" alt="Tribal Portal 2" />
+								<img src="T3.jpg" class="slide-image" alt="Tribal Portal 3" />
+								<img src="T4.jpg" class="slide-image" alt="Tribal Portal 4" />
+								<img src="T5.jpg" class="slide-image" alt="Tribal Portal 5" />
+							</div>
+
+							<!-- Fallback Icon if images fail to load or for style -->
+							<div
+								class="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-transparent transition-colors duration-500 pointer-events-none z-20"
+							>
+								<div
+									class="text-center opacity-0 group-hover:opacity-0 transition-opacity"
+								>
+									<!-- Hidden initially to show slides, can be adjusted -->
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Project 3: MOVIE RECOMMENDER (Updated Image M2) -->
+				<div
+					class="project-item group relative grid md:grid-cols-12 gap-8 items-center"
+				>
+					<div class="md:col-span-7 order-2 md:order-1">
+						<div
+							class="bg-brand-gray border border-white/10 aspect-video rounded-sm overflow-hidden relative group-hover:border-brand-red/30 transition-colors"
+						>
+							<!-- Slideshow Container (Even with 1 image, structure kept for consistency) -->
+							<div
+								class="slideshow-container absolute inset-0 w-full h-full bg-zinc-900"
+							>
+								<img
+									src="M2.png"
+									class="slide-image active"
+									alt="Movie Recommender Dashboard"
+								/>
+							</div>
+
+							<!-- Fallback Icon if images fail to load or for style -->
+							<div
+								class="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-transparent transition-colors duration-500 pointer-events-none z-20"
+							>
+								<div
+									class="text-center opacity-0 group-hover:opacity-0 transition-opacity"
+								>
+									<!-- Hidden initially to show slides, can be adjusted -->
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="md:col-span-5 order-1 md:order-2">
+						<span
+							class="text-brand-red font-bold tracking-widest text-xs uppercase mb-2 block"
+							>03 / Machine Learning</span
+						>
+						<h3
+							class="text-3xl md:text-4xl font-display font-bold mb-6 group-hover:text-brand-red transition-colors"
+						>
+							Movie Recommender
+						</h3>
+						<p class="text-gray-400 mb-6 leading-relaxed">
+							Content-based filtering system analyzing genres and user
+							preferences to suggest movies. Features a clean, interactive
+							frontend for browsing results.
+						</p>
+						<div class="flex flex-wrap gap-2 mb-8">
+							<span
+								class="px-3 py-1 border border-white/20 text-xs uppercase tracking-wider text-gray-300"
+								>Python</span
+							>
+							<span
+								class="px-3 py-1 border border-white/20 text-xs uppercase tracking-wider text-gray-300"
+								>Scikit-learn</span
+							>
+							<span
+								class="px-3 py-1 border border-white/20 text-xs uppercase tracking-wider text-gray-300"
+								>Streamlit</span
+							>
+						</div>
+						<button
+							class="flex items-center gap-3 text-sm font-bold uppercase tracking-widest hover:text-brand-red transition-colors hover-trigger"
+						>
+							View Details <i class="fa-solid fa-arrow-right"></i>
+						</button>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- ACHIEVEMENTS STRIP -->
+		<section
+			class="py-20 border-y border-white/10 bg-brand-gray overflow-hidden"
+		>
+			<div
+				class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center"
+			>
+				<div>
+					<h2 class="text-3xl font-display font-bold uppercase mb-8">
+						Recognitions
+					</h2>
+					<div class="space-y-6">
+						<div class="achievement-item border-l-2 border-brand-red pl-6 py-2">
+							<h4 class="text-xl font-bold">SSIP Hackathon 2023</h4>
+							<p
+								class="text-brand-red text-sm uppercase tracking-wider font-bold mb-1"
+							>
+								Finalist
+							</p>
+							<p class="text-gray-400 text-sm">
+								Selected among top teams for scalable Natural Farming
+								Marketplace.
+							</p>
+						</div>
+						<div
+							class="achievement-item border-l-2 border-gray-700 pl-6 py-2 hover:border-brand-red transition-colors duration-300"
+						>
+							<h4 class="text-xl font-bold">NPTEL Certification</h4>
+							<p
+								class="text-brand-red text-sm uppercase tracking-wider font-bold mb-1"
+							>
+								Data Science
+							</p>
+							<p class="text-gray-400 text-sm">
+								Python for Data Science, NumPy, Data Visualization.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div
+					class="relative h-auto aspect-[7/5] bg-black border border-white/5 overflow-hidden group"
+				>
+					<div
+						class="absolute top-4 left-4 w-4 h-4 border-t border-l border-brand-red z-10"
+					></div>
+					<div
+						class="absolute bottom-4 right-4 w-4 h-4 border-b border-r border-brand-red z-10"
+					></div>
+
+					<!-- Certificate Image -->
+					<img
+						src="SSIP_Certificate.png"
+						class="absolute inset-0 w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700"
+						alt="Hackathon Certificate"
+					/>
+
+					<!-- Optional Gradient like profile -->
+					<div
+						class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-0 transition-opacity duration-500"
+					></div>
+
+					<!-- Label -->
+					<div class="absolute bottom-4 left-6 z-10">
+						<span
+							class="text-white font-display uppercase tracking-widest text-sm opacity-100 group-hover:opacity-0 transition-opacity duration-300"
+							>Certificate of Achievement</span
+						>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- CONTACT SECTION -->
+		<section
+			id="contact"
+			class="min-h-screen flex items-center justify-center relative py-20 px-6"
+		>
+			<div class="absolute inset-0 bg-brand-black z-[-1]"></div>
+			<!-- Gradient Background -->
+			<div
+				class="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-brand-red/10 to-transparent"
+			></div>
+
+			<div class="relative z-10 text-center max-w-4xl mx-auto">
+				<span
+					class="text-brand-red font-bold tracking-[0.5em] text-sm uppercase block mb-6"
+					>Connect</span
+				>
+				<h2
+					class="text-6xl md:text-9xl font-display font-bold uppercase mb-12 tracking-tight"
+				>
+					Let's
+					<span
+						class="text-outline hover:text-white transition-all duration-500 cursor-default"
+						>Build</span
+					>
+				</h2>
+
+				<div
+					class="relative z-10 flex flex-col md:flex-row justify-center gap-8 mb-16"
+				>
+					<a
+						href="mailto:harshkadikar@gmail.com"
+						class="group flex items-center gap-4 bg-white text-black px-8 py-4 font-bold uppercase tracking-wider hover:bg-brand-red hover:text-white transition-all duration-300 hover-trigger"
+					>
+						<i class="fa-solid fa-envelope"></i> Email Me
+					</a>
+					<a
+						href="https://linkedin.com/in/HarshKadikar"
+						target="_blank"
+						class="flex items-center gap-4 border border-white/20 px-8 py-4 font-bold uppercase tracking-wider hover:bg-white/10 hover-trigger"
+					>
+						<i class="fa-brands fa-linkedin-in"></i> LinkedIn
+					</a>
+					<a
+						href="https://github.com/hsk081004"
+						target="_blank"
+						class="flex items-center gap-4 border border-white/20 px-8 py-4 font-bold uppercase tracking-wider hover:bg-white/10 hover-trigger"
+					>
+						<i class="fa-brands fa-github"></i> GitHub
+					</a>
+					<a
+						href="https://instagram.com/harshkadikar"
+						target="_blank"
+						class="flex items-center gap-4 border border-white/20 px-8 py-4 font-bold uppercase tracking-wider hover:bg-white/10 hover-trigger"
+					>
+						<i class="fa-brands fa-instagram"></i> Instagram
+					</a>
+				</div>
+
+				<footer class="text-gray-500 text-sm tracking-widest uppercase">
+					&copy; 2024 Harsh Kadikar. All Rights Reserved.
+				</footer>
+			</div>
+		</section>
+
+		<script>
+			// Register GSAP Plugins
+			gsap.registerPlugin(ScrollTrigger);
+
+			// --- CUSTOM CURSOR ---
+			const cursor = document.getElementById('cursor');
+			const hoverTriggers = document.querySelectorAll('.hover-trigger');
+
+			document.addEventListener('mousemove', (e) => {
+				cursor.style.left = e.clientX + 'px';
+				cursor.style.top = e.clientY + 'px';
+			});
+
+			hoverTriggers.forEach((link) => {
+				link.addEventListener('mouseenter', () =>
+					cursor.classList.add('hovered'),
+				);
+				link.addEventListener('mouseleave', () =>
+					cursor.classList.remove('hovered'),
+				);
+			});
+
+			// --- PRELOADER SEQUENCE ---
+			function startSite() {
+				// Show body content
+				document.body.style.visibility = 'visible';
+
+				const loadTl = gsap.timeline({
+					onComplete: () => {
+						// Start HERO Animations only after loader finishes
+						initHeroAnimations();
+						// Start Slideshows
+						initSlideshows();
+					},
+				});
+
+				// 1. Progress Bar Fills
+				loadTl
+					.to('.loader-progress', {
+						scaleX: 1,
+						duration: 1.5,
+						ease: 'power2.inOut',
+					})
+					// 2. Logo Glitch/Pulse
+					.to('.loader-logo-glitch', {
+						opacity: 0.8,
+						duration: 0.1,
+						yoyo: true,
+						repeat: 3,
+					})
+					// 3. Fade out Loader Content
+					.to('.loader-content', {
+						opacity: 0,
+						y: -50,
+						duration: 0.5,
+						ease: 'power2.in',
+					})
+					// 4. Split Curtains (Opposite Move)
+					.to(
+						'.loader-panel-left',
+						{
+							xPercent: -100,
+							duration: 1.2,
+							ease: 'power4.inOut',
+						},
+						'split',
+					)
+					.to(
+						'.loader-panel-right',
+						{
+							xPercent: 100,
+							duration: 1.2,
+							ease: 'power4.inOut',
+						},
+						'split',
+					)
+					// Remove from DOM pointer events
+					.set('#preloader', {
+						pointerEvents: 'none',
+					});
+			}
+
+			// --- HERO ANIMATIONS (Called after loader) ---
+			function initHeroAnimations() {
+				const tl = gsap.timeline();
+
+				// Reveal Navigation
+				tl.to('.nav-item', {
+					opacity: 1,
+					duration: 0.8,
+				})
+					// Reveal Text
+					.to(
+						'.hero-subtitle',
+						{
+							y: 0,
+							duration: 1,
+							ease: 'power4.out',
+						},
+						'-=0.4',
+					)
+					.to(
+						'.hero-title',
+						{
+							y: 0, // Reset transform
+							opacity: 1,
+							duration: 1.2,
+							ease: 'power3.out',
+						},
+						'-=0.8',
+					)
+					.to(
+						'.hero-cta',
+						{
+							opacity: 1,
+							y: 0,
+							duration: 0.8,
+						},
+						'-=0.4',
+					)
+					.to(
+						'.hero-scroll',
+						{
+							opacity: 1,
+							duration: 1,
+						},
+						'-=0.6',
+					);
+			}
+
+			// --- MARQUEE ANIMATION ---
+			gsap.to('.marquee-content', {
+				xPercent: -50,
+				ease: 'none',
+				duration: 20,
+				repeat: -1,
+			});
+
+			// --- SCROLL REVEALS ---
+
+			// About Headers
+			gsap.utils.toArray('.reveal-header').forEach((header) => {
+				gsap.from(header, {
+					scrollTrigger: {
+						trigger: header,
+						start: 'top 80%',
+						toggleActions: 'play none none reverse',
+					},
+					y: 50,
+					opacity: 0,
+					duration: 0.8,
+					ease: 'power3.out',
+				});
+			});
+
+			// About Text Stagger
+			gsap.from('.reveal-text-block p', {
+				scrollTrigger: {
+					trigger: '.reveal-text-block',
+					start: 'top 80%',
+				},
+				y: 30,
+				opacity: 0,
+				stagger: 0.2,
+				duration: 0.8,
+			});
+
+			// Skills Cards Stagger
+			gsap.from('.skill-card', {
+				scrollTrigger: {
+					trigger: '#skills',
+					start: 'top 70%',
+				},
+				y: 50,
+				opacity: 0,
+				stagger: 0.1,
+				duration: 0.6,
+				ease: 'back.out(1.7)',
+			});
+
+			// Project Items Reveal
+			gsap.utils.toArray('.project-item').forEach((item, i) => {
+				gsap.from(item, {
+					scrollTrigger: {
+						trigger: item,
+						start: 'top 80%',
+					},
+					y: 100,
+					opacity: 0,
+					duration: 1,
+					ease: 'power4.out',
+				});
+			});
+
+			// Achievement Items
+			gsap.from('.achievement-item', {
+				scrollTrigger: {
+					trigger: '.achievement-item',
+					start: 'top 85%',
+				},
+				x: -50,
+				opacity: 0,
+				stagger: 0.2,
+				duration: 0.8,
+			});
+
+			// --- BACKGROUND CANVAS (Computer Vision / Network Effect) ---
+			const canvas = document.getElementById('hero-canvas');
+			const ctx = canvas.getContext('2d');
+
+			let width, height;
+			let particles = [];
+
+			function resize() {
+				width = canvas.width = window.innerWidth;
+				height = canvas.height = window.innerHeight;
+			}
+
+			class Particle {
+				constructor() {
+					this.x = Math.random() * width;
+					this.y = Math.random() * height;
+					this.vx = (Math.random() - 0.5) * 0.5;
+					this.vy = (Math.random() - 0.5) * 0.5;
+					this.size = Math.random() * 2;
+				}
+
+				update() {
+					this.x += this.vx;
+					this.y += this.vy;
+
+					if (this.x < 0 || this.x > width) this.vx *= -1;
+					if (this.y < 0 || this.y > height) this.vy *= -1;
+				}
+
+				draw() {
+					ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+					ctx.beginPath();
+					ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+					ctx.fill();
+				}
+			}
+
+			function initParticles() {
+				particles = [];
+				for (let i = 0; i < 50; i++) {
+					particles.push(new Particle());
+				}
+			}
+
+			function animate() {
+				ctx.clearRect(0, 0, width, height);
+
+				particles.forEach((p, index) => {
+					p.update();
+					p.draw();
+
+					// Draw connections
+					for (let j = index + 1; j < particles.length; j++) {
+						const p2 = particles[j];
+						const dx = p.x - p2.x;
+						const dy = p.y - p2.y;
+						const dist = Math.sqrt(dx * dx + dy * dy);
+
+						if (dist < 150) {
+							ctx.strokeStyle = `rgba(220, 0, 0, ${0.15 - dist / 1000})`; // Subtle red connections
+							ctx.lineWidth = 1;
+							ctx.beginPath();
+							ctx.moveTo(p.x, p.y);
+							ctx.lineTo(p2.x, p2.y);
+							ctx.stroke();
+						}
+					}
+				});
+
+				requestAnimationFrame(animate);
+			}
+
+			// --- SLIDESHOW LOGIC ---
+			function initSlideshows() {
+				const slideshows = document.querySelectorAll('.slideshow-container');
+				slideshows.forEach((container) => {
+					const slides = container.querySelectorAll('.slide-image');
+					if (slides.length < 2) return;
+
+					let current = 0;
+
+					// Initial set up
+					gsap.set(slides[0], { opacity: 1, zIndex: 2 });
+					// Ensure others are hidden
+					for (let i = 1; i < slides.length; i++) {
+						gsap.set(slides[i], { opacity: 0, zIndex: 1 });
+					}
+
+					setInterval(() => {
+						const next = (current + 1) % slides.length;
+
+						// Bring next to top
+						gsap.set(slides[next], { zIndex: 2 });
+						gsap.set(slides[current], { zIndex: 1 }); // Demote current
+
+						gsap.to(slides[current], { opacity: 0, duration: 1.5 });
+						gsap.fromTo(
+							slides[next],
+							{ opacity: 0 },
+							{ opacity: 1, duration: 1.5 },
+						);
+
+						current = next;
+					}, 3000); // 3 seconds per slide
+				});
+			}
+
+			window.addEventListener('resize', () => {
+				resize();
+				initParticles();
+			});
+
+			// Navbar Scroll Effect
+			window.addEventListener('scroll', () => {
+				const nav = document.querySelector('nav');
+				if (window.scrollY > 50) {
+					nav.classList.add('nav-scrolled');
+					nav.classList.remove('mix-blend-difference');
+				} else {
+					nav.classList.remove('nav-scrolled');
+					nav.classList.add('mix-blend-difference');
+				}
+			});
+
+			// Start everything on load
+			window.onload = () => {
+				resize();
+				initParticles();
+				animate();
+				startSite(); // Start the loading sequence
+			};
+		</script>
+	</body>
+</html>
