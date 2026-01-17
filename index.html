@@ -91,6 +91,12 @@
 				color: white;
 			}
 
+			/* Mobile Link Specifics */
+			.mobile-link {
+				/* Removing stroke for mobile to ensure visibility */
+				-webkit-text-stroke: 0px;
+			}
+
 			/* Custom Cursor */
 			#cursor {
 				position: fixed;
@@ -204,9 +210,9 @@
 				transition: all 0.4s ease;
 			}
 			nav.nav-scrolled {
-				background-color: rgba(5, 5, 5, 0.85); /* Dark semi-transparent */
-				backdrop-filter: blur(15px); /* Strong Blur */
-				-webkit-backdrop-filter: blur(15px);
+				background-color: rgba(5, 5, 5, 0.9); /* Darker for better visibility */
+				backdrop-filter: blur(20px); /* Stronger Blur */
+				-webkit-backdrop-filter: blur(20px);
 				border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 				padding-top: 15px;
 				padding-bottom: 15px;
@@ -314,10 +320,57 @@
 					>Resume</a
 				>
 			</div>
-			<a href="#contact" class="md:hidden text-xl hover-trigger text-white"
-				><i class="fa-solid fa-bars"></i
-			></a>
+			<!-- Mobile Menu Toggle Button -->
+			<button
+				id="mobile-toggle"
+				class="md:hidden text-2xl hover-trigger text-white z-50 p-2"
+			>
+				<i class="fa-solid fa-bars"></i>
+			</button>
 		</nav>
+
+		<!-- MOBILE MENU OVERLAY -->
+		<!-- Increased Z-Index to 5000 to ensure it's on top. Darker background for visibility. -->
+		<div
+			id="mobile-menu"
+			class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[5000] flex flex-col justify-center items-center text-center opacity-0 pointer-events-none"
+		>
+			<button
+				id="mobile-close"
+				class="absolute top-8 right-8 text-white text-4xl hover-trigger hover:text-brand-red transition-colors z-[5001]"
+			>
+				<i class="fa-solid fa-xmark"></i>
+			</button>
+			<div class="flex flex-col gap-10">
+				<!-- Removed text-transparent/outline classes. Using solid white text for mobile visibility -->
+				<a
+					href="#about"
+					class="mobile-link text-6xl font-display font-bold uppercase text-white hover:text-brand-red transition-colors duration-300"
+					>About</a
+				>
+				<a
+					href="#skills"
+					class="mobile-link text-6xl font-display font-bold uppercase text-white hover:text-brand-red transition-colors duration-300"
+					>Skills</a
+				>
+				<a
+					href="#projects"
+					class="mobile-link text-6xl font-display font-bold uppercase text-white hover:text-brand-red transition-colors duration-300"
+					>Projects</a
+				>
+				<a
+					href="#contact"
+					class="mobile-link text-6xl font-display font-bold uppercase text-white hover:text-brand-red transition-colors duration-300"
+					>Contact</a
+				>
+				<a
+					href="Harsh Kadikar Resume.pdf"
+					target="_blank"
+					class="mobile-link text-2xl font-sans uppercase tracking-widest text-white border border-brand-red px-10 py-4 mt-6 hover:bg-brand-red transition-all"
+					>Resume</a
+				>
+			</div>
+		</div>
 
 		<!-- HERO SECTION -->
 		<header
@@ -700,13 +753,12 @@
 								>Flask</span
 							>
 						</div>
-                        <a href="https://github.com/hsk081004/License-Plate-Recognition-System" target="_blank">
+						<a href="https://github.com/hsk081004/License-Plate-Recognition-System" target="_blank">
 						<button
 							class="flex items-center gap-3 text-sm font-bold uppercase tracking-widest hover:text-brand-red transition-colors hover-trigger"
 						>
 							View Details <i class="fa-solid fa-arrow-right"></i>
-						</button>
-                        </a>
+						</button></a>
 					</div>
 				</div>
 
@@ -743,7 +795,7 @@
 								>Node</span
 							>
 						</div>
-                        <a href="https://github.com/hsk081004/Tribal-Assistance-Portal" target="_blank">
+						<a href="https://github.com/hsk081004/Tribal-Assistance-Portal" target="_blank">
 						<button
 							class="flex items-center gap-3 text-sm font-bold uppercase tracking-widest hover:text-brand-red transition-colors hover-trigger"
 						>
@@ -843,7 +895,7 @@
 								>Streamlit</span
 							>
 						</div>
-                        <a href="https://github.com/hsk081004/movie-recommender" target="_blank">
+						<a href="https://github.com/hsk081004/movie-recommender" target="_blank">
 						<button
 							class="flex items-center gap-3 text-sm font-bold uppercase tracking-widest hover:text-brand-red transition-colors hover-trigger"
 						>
@@ -1320,6 +1372,44 @@
 					nav.classList.add('mix-blend-difference');
 				}
 			});
+
+			// --- MOBILE MENU LOGIC ---
+			const mobileBtn = document.getElementById('mobile-toggle');
+			const mobileMenu = document.getElementById('mobile-menu');
+			const mobileClose = document.getElementById('mobile-close');
+			const mobileLinks = document.querySelectorAll('.mobile-link');
+
+			function openMobileMenu() {
+				gsap.to(mobileMenu, {
+					opacity: 1,
+					pointerEvents: 'all',
+					duration: 0.5,
+					ease: 'power2.out',
+				});
+				gsap.from(mobileLinks, {
+					y: 50,
+					opacity: 0,
+					stagger: 0.1,
+					duration: 0.5,
+					delay: 0.2,
+					ease: 'power2.out',
+				});
+			}
+
+			function closeMobileMenu() {
+				gsap.to(mobileMenu, {
+					opacity: 0,
+					pointerEvents: 'none',
+					duration: 0.5,
+					ease: 'power2.in',
+				});
+			}
+
+			mobileBtn.addEventListener('click', openMobileMenu);
+			mobileClose.addEventListener('click', closeMobileMenu);
+			mobileLinks.forEach((link) =>
+				link.addEventListener('click', closeMobileMenu),
+			);
 
 			// Start everything on load
 			window.onload = () => {
